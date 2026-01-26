@@ -1,5 +1,4 @@
 from django.db import models
-from django.core.validators import MinValueValidator
 
 class Category(models.Model):
     TYPE_CHOICES = [
@@ -16,7 +15,7 @@ class Category(models.Model):
 
 class Transaction(models.Model):
     description = models.CharField(max_length=255)
-    amount = models.DecimalField(max_digits=12, decimal_places=0, validators=[MinValueValidator(0)])
+    amount = models.DecimalField(max_digits=12, decimal_places=0)
     date = models.DateField()
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
