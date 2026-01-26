@@ -1,0 +1,18 @@
+{% extends 'expenses/base.html' %}
+
+{% block title %}Delete Transaction{% endblock %}
+
+{% block content %}
+<h1>Delete Transaction</h1>
+
+<div class="alert alert-danger mt-4">
+    <p>Are you sure you want to delete "<strong>{{ transaction.description }}</strong>"?</p>
+    <p>Amount: {{ transaction.amount }}</p>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+    <a href="{% url 'transaction_list' %}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

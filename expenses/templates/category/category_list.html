@@ -1,0 +1,50 @@
+{% extends 'expenses/base.html' %}
+
+{% block title %}Categories{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Categories</h1>
+    <a href="{% url 'category_create' %}" class="btn btn-primary">+ Add Category</a>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">Income Categories</div>
+            <ul class="list-group list-group-flush">
+                {% for category in income_categories %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ category.name }}
+                    <div>
+                        <a href="{% url 'category_update' category.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="{% url 'category_delete' category.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">No income categories</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">Expense Categories</div>
+            <ul class="list-group list-group-flush">
+                {% for category in expense_categories %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ category.name }}
+                    <div>
+                        <a href="{% url 'category_update' category.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="{% url 'category_delete' category.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">No expense categories</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
