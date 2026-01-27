@@ -8,8 +8,14 @@ class CategoryForm(forms.ModelForm):
         model = Category
         fields = ['name', 'type']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'type': forms.Select(attrs={'class': 'form-control'}),
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'required': True
+            }),
+            'type': forms.Select(attrs={
+                'class': 'form-control',
+                'required': True
+            }),
         }
 
 
@@ -18,10 +24,26 @@ class TransactionForm(forms.ModelForm):
         model = Transaction
         fields = ['description', 'amount', 'date', 'category']
         widgets = {
-            'description': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Description'}),
-            'amount': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Amount'}),
-            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'category': forms.Select(attrs={'class': 'form-control'}),
+            'description': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Description',
+                'required': True
+            }),
+            'amount': forms.NumberInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Amount',
+                'min': '1',
+                'required': True
+            }),
+            'date': forms.DateInput(attrs={
+                'type': 'date', 
+                'class': 'form-control',
+                'required': True
+            }),
+            'category': forms.Select(attrs={
+                'class': 'form-control',
+                'required': True
+            }),
         }
     
     def __init__(self, *args, **kwargs):
