@@ -22,7 +22,7 @@ class CategoryForm(forms.ModelForm):
 class TransactionForm(forms.ModelForm):
     class Meta:
         model = Transaction
-        fields = ['description', 'amount', 'date', 'category']
+        fields = ['date', 'amount', 'description', 'category']
         widgets = {
             'description': forms.TextInput(attrs={
                 'class': 'form-control', 
