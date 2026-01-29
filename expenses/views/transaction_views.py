@@ -40,25 +40,11 @@ def transaction_create_by_type(request, type):
         # Filter category theo type
         form.fields['category'].queryset = Category.objects.filter(type=type)
     
-    return render(request, 'expenses/transaction_create_form.html', {
-        'form': form,
-    })
-
-
-# User vào /add/ (GET) → Hiển thị form trống
-# User nhập data, bấm Submit (POST) → Validate → Lưu DB → Redirect về list
-def transaction_create(request):
-    if request.method == 'POST':
-        form = TransactionForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('transaction_list')
-    else:
-        form = TransactionForm()
     return render(request, 'expenses/transaction_form.html', {
         'form': form,
-        'title': 'Add Transaction'
+        'is_create': True,
     })
+
 
 # User vào /edit/<id>/ (GET) → Hiển thị form có dữ liệu
 # User sửa data, bấm Submit (POST) → Validate → Lưu DB → Redirect về list
@@ -74,7 +60,7 @@ def transaction_update(request, pk):
         form = TransactionForm(instance=transaction)
     return render(request, 'expenses/transaction_form.html', {
         'form': form,
-        'title': 'Edit Transaction'
+        'is_create': False,
     })
 
 # User vào /delete/<id>/ (GET) → Hiển thị confirm delete
