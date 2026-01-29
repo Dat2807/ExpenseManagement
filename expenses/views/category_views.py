@@ -1,4 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.db.models import ProtectedError
 from ..models import Category
 from ..forms import CategoryForm
 
@@ -18,7 +20,8 @@ def category_create(request):
     if request.method == 'POST':
         form = CategoryForm(request.POST)
         if form.is_valid():
-            form.save()
+            category = form.save()
+            messages.success(request, f'Category "{category.name}" has been created successfully.')
             return redirect('category_list')
     else:
         form = CategoryForm()
@@ -35,7 +38,8 @@ def category_update(request, pk):
     if request.method == 'POST':
         form = CategoryForm(request.POST, instance=category)
         if form.is_valid():
-            form.save()
+            updated_category = form.save()
+            messages.success(request, f'Category "{updated_category.name}" has been updated successfully.')
             return redirect('category_list')
     else:
         form = CategoryForm(instance=category)
@@ -49,8 +53,13 @@ def category_update(request, pk):
 def category_delete(request, pk):
     category = get_object_or_404(Category, pk=pk)
     if request.method == 'POST':
-        category.delete()
-        return redirect('category_list')
+        try:
+            category.delete()
+            messages.success(request, f'Category "{category.name}" has been deleted successfully.')
+            return redirect('category_list')
+        except ProtectedError:
+            messages.error(request, f'Cannot delete category "{category.name}" because it is being used by one or more transactions. Please delete or reassign those transactions first.')
+            return redirect('category_list')
     return render(request, 'category/category_confirm_delete.html', {
         'category': category
     })

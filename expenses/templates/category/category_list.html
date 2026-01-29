@@ -5,7 +5,10 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Categories</h1>
-    <a href="{% url 'category_create' %}" class="btn btn-primary">+ Add Category</a>
+    <button type="button" class="btn btn-primary" data-modal-url="{% url 'category_create' %}"
+        data-modal-title="Add Category">
+        + Add Category
+    </button>
 </div>
 
 <div class="row">
@@ -17,8 +20,10 @@
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     {{ category.name }}
                     <div>
-                        <a href="{% url 'category_update' category.pk %}" class="btn btn-sm btn-warning">Edit</a>
-                        <a href="{% url 'category_delete' category.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                        <button class="btn btn-sm btn-warning" data-modal-url="{% url 'category_update' category.pk %}"
+                            data-modal-title="Edit Category">Edit</button>
+                        <button class="btn btn-sm btn-danger" data-modal-url="{% url 'category_delete' category.pk %}"
+                            data-modal-title="Delete Category">Delete</button>
                     </div>
                 </li>
                 {% empty %}
@@ -27,7 +32,7 @@
             </ul>
         </div>
     </div>
-    
+
     <div class="col-md-6">
         <div class="card">
             <div class="card-header bg-danger text-white">Expense Categories</div>
@@ -36,8 +41,10 @@
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     {{ category.name }}
                     <div>
-                        <a href="{% url 'category_update' category.pk %}" class="btn btn-sm btn-warning">Edit</a>
-                        <a href="{% url 'category_delete' category.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                        <button class="btn btn-sm btn-warning" data-modal-url="{% url 'category_update' category.pk %}"
+                            data-modal-title="Edit Category">Edit</button>
+                        <button class="btn btn-sm btn-danger" data-modal-url="{% url 'category_delete' category.pk %}"
+                            data-modal-title="Delete Category">Delete</button>
                     </div>
                 </li>
                 {% empty %}
@@ -47,4 +54,65 @@
         </div>
     </div>
 </div>
+
+<!-- Universal Modal -->
+<div class="modal fade" id="universalModal" tabindex="-1" aria-labelledby="universalModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" id="modalContent">
+            <!-- Content will be loaded here via AJAX -->
+        </div>
+    </div>
+</div>
+
+<script>
+    function loadModal(url, title) {
+        fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                // Parse the HTML to extract just the content
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // Tìm phần content trong block content
+                const contentBlock = doc.querySelector('.container') || doc.body;
+
+                // Build modal structure
+                const modalHTML = `
+                    <div class="modal-header">
+                        <h5 class="modal-title">${title}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        ${contentBlock.innerHTML}
+                    </div>
+                `;
+
+                document.getElementById('modalContent').innerHTML = modalHTML;
+
+                // QUAN TRỌNG: Set form action SAU KHI đã inject HTML vào DOM
+                const form = document.querySelector('#universalModal form');
+                if (form) {
+                    form.setAttribute('action', url);
+                }
+
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('universalModal'));
+                modal.show();
+            })
+            .catch(error => {
+                console.error('Error loading modal:', error);
+            });
+    }
+
+    // Event delegation cho các button có data-modal-url
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('[data-modal-url]').forEach(button => {
+            button.addEventListener('click', function () {
+                const url = this.getAttribute('data-modal-url');
+                const title = this.getAttribute('data-modal-title');
+                loadModal(url, title);
+            });
+        });
+    });
+</script>
 {% endblock %}

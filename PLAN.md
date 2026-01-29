@@ -2,21 +2,30 @@
 
 ## Tổng quan
 
-Xây dựng web quản lý chi tiêu với Django + PostgreSQL, bắt đầu từ CRUD cơ bản với phân loại danh mục, sử dụng Django Template cho frontend.
+Xây dựng web quản lý chi tiêu với Django + PostgreSQL theo mô hình **Monthly Budget Tracker**:
+- Trang chủ: List các tháng với tổng income/expense/balance
+- Chi tiết tháng: Xem và quản lý transactions trong tháng đó
+- Budget planning: Nhập dự kiến chi cho mỗi tháng
+- Global balance: Số dư tổng tích lũy (có thể nhập vốn ban đầu)
 
 ---
 
 ## Kiến trúc tổng quan
 
 ```
-[Browser] → [Django Templates + Static Files]
-                    ↓
-            [Views (Logic)]
-                    ↓
-            [Models (Data)]
-                    ↓
-            [PostgreSQL Database]
+[Homepage: Monthly List]
+    ↓ (Click vào tháng)
+[Month Detail: Transactions + Budget]
+    ↓ (Add/Edit transactions)
+[Transaction Form]
+    ↓
+[Update Global Balance]
 ```
+
+**Flow:**
+- User vào trang chủ → Thấy list các tháng với income/expense/balance
+- Click vào tháng → Xem chi tiết transactions + budget của tháng đó
+- Thêm transaction → Tự động cập nhật balance tháng và global balance
 
 ---
 
@@ -67,6 +76,28 @@ expense_tracker/
 | date | DateField | Ngày giao dịch |
 | category | ForeignKey | Liên kết Category (type lấy từ Category) |
 | created_at | DateTimeField | Ngày tạo |
+
+### MonthlyBudget (Ngân sách tháng)
+| Field | Type | Mô tả |
+|-------|------|-------|
+| id | AutoField | Primary key |
+| year | IntegerField | Năm (2024, 2025, ...) |
+| month | IntegerField | Tháng (1-12) |
+| budgeted_expense | DecimalField | Số tiền dự kiến chi trong tháng |
+| created_at | DateTimeField | Ngày tạo |
+| updated_at | DateTimeField | Ngày cập nhật |
+
+**Unique constraint:** `(year, month)` - Mỗi tháng chỉ có 1 budget
+
+### GlobalBalance (Số dư tổng)
+| Field | Type | Mô tả |
+|-------|------|-------|
+| id | AutoField | Primary key |
+| initial_balance | DecimalField | Vốn ban đầu (nhập 1 lần) |
+| current_balance | DecimalField | Số dư hiện tại (tự động tính) |
+| updated_at | DateTimeField | Ngày cập nhật |
+
+**Logic:** `current_balance = initial_balance + (tổng income - tổng expense)`
 
 ---
 
@@ -152,7 +183,7 @@ expense_tracker/
 **Transaction Views:**
 | View | URL | Chức năng |
 |------|-----|-----------|
-| TransactionListView | `/` | Danh sách giao dịch |
+| TransactionListView | `/` | Danh sách giao dịch + tổng thu/chi |
 | TransactionCreateView | `/add/` | Thêm giao dịch (chọn loại → filter danh mục) |
 | TransactionUpdateView | `/edit/<id>/` | Sửa giao dịch |
 | TransactionDeleteView | `/delete/<id>/` | Xóa giao dịch |
@@ -165,13 +196,79 @@ expense_tracker/
 
 ---
 
-### Phase 5: Templates
+### Phase 5: Templates & UX (đã làm gần xong)
 
-- [ ] Base template với Bootstrap 5 CDN
-- [ ] Transaction list (trang chủ)
-- [ ] Transaction form (thêm/sửa)
-- [ ] Category list
-- [ ] Delete confirmation
+- [x] Base template với Bootstrap 5 CDN
+- [x] Transaction list (trang chủ, income/expense 2 cột + modal)
+- [x] Transaction form (thêm/sửa)
+- [x] Category list (income/expense tách cột)
+- [x] Delete confirmation
+- [x] **Category CRUD với Modal (AJAX load)**
+  - ✅ Chuyển Create/Edit/Delete sang Bootstrap Modal
+  - ✅ Load nội dung từ template hiện có qua AJAX
+  - ✅ Ngăn xóa Category đang được sử dụng (PROTECT)
+  - ⚠️ **Limitation:** 
+    - Form submit vẫn reload trang (chưa dùng AJAX submit)
+    - Message vẫn xuất hiện trên page (chưa dùng AJAX) 
+
+**Cải tiến tương lai (Optional):**
+- [ ] AJAX form submission (không reload trang)
+  - Sửa views trả về JSON response
+  - JavaScript intercept form submit
+  - Update DOM manually sau khi success
+  - Hiển thị validation errors trong modal
+  - Message đổi thành dạng Toast  
+
+---
+
+### Phase 6: Monthly Budget System
+
+**Models:**
+- [ ] Tạo model `MonthlyBudget` (year, month, budgeted_expense)
+- [ ] Tạo model `GlobalBalance` (initial_balance, current_balance)
+- [ ] Chạy migrations
+
+**Views:**
+- [ ] Tạo `monthly_list` view - Trang chủ hiển thị list các tháng
+  - Group transactions theo năm/tháng
+  - Tính income/expense/balance cho mỗi tháng
+  - Hiển thị global balance
+- [ ] Tạo `month_detail` view - Chi tiết tháng
+  - Hiển thị transactions trong tháng (income/expense 2 cột)
+  - Form nhập/sửa budget cho tháng
+  - Form thêm transaction (modal như hiện tại)
+- [ ] Logic tính toán global balance tự động
+
+**Templates:**
+- [ ] `monthly_list.html` - Bảng list các tháng
+  - Columns: Tháng/Năm | Income | Expense | Budget | Balance | Actions
+  - Click vào row → chuyển đến `month_detail`
+  - Hiển thị Global Balance ở trên
+- [ ] `month_detail.html` - Chi tiết tháng
+  - Tái sử dụng layout từ `transaction_list.html`
+  - Thêm phần Budget (dự kiến vs thực tế)
+  - List transactions trong tháng
+
+**Forms:**
+- [ ] `MonthlyBudgetForm` - Form nhập/sửa budget
+- [ ] `GlobalBalanceForm` - Form nhập vốn ban đầu (tùy chọn)
+
+**URLs:**
+- [ ] Đổi homepage từ `transaction_list` → `monthly_list`
+- [ ] Thêm route `month/<year>/<month>/` cho `month_detail`
+
+---
+
+### Phase 7: Biểu đồ & Chart.js
+
+- [ ] Kết nối dữ liệu thống kê với Chart.js
+- [ ] Biểu đồ cột theo tháng (Income vs Expense)
+- [ ] Biểu đồ đường xu hướng balance theo thời gian
+
+### Phase 8: User Authentication
+
+- [ ] Đăng ký / đăng nhập
+- [ ] Mỗi user có dữ liệu chi tiêu riêng
 
 ---
 
@@ -199,10 +296,10 @@ expense_tracker/
 
 ## Roadmap tương lai
 
-1. **Phase hiện tại**: CRUD + Categories ✅
-2. **Phase 5**: Thống kê theo tuần/tháng/năm
-3. **Phase 6**: Biểu đồ với Chart.js
-4. **Phase 7**: User Authentication (đăng ký/đăng nhập)
+1. **Hiện tại**: CRUD + Categories + Templates ✅
+2. **Tiếp theo**: Phase 6 – Monthly Budget System (đang làm)
+3. Phase 7 – Filter theo tháng/năm + Biểu đồ với Chart.js
+4. Phase 8 – User Authentication (đăng ký/đăng nhập)
 
 ---
 

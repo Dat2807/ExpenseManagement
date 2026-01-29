@@ -18,7 +18,7 @@ class Transaction(models.Model):
     description = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=12, decimal_places=0, validators=[MinValueValidator(0)])
     date = models.DateField()
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
