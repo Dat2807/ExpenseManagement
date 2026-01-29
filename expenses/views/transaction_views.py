@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 from ..models import Category, Transaction
 from ..forms import TransactionForm
 
@@ -27,13 +28,15 @@ def transaction_list(request):
             expense_form = TransactionForm(request.POST, prefix='expense')
             expense_form.fields['category'].queryset = Category.objects.filter(type='expense')
             if expense_form.is_valid():
-                expense_form.save()
+                transaction = expense_form.save()
+                messages.success(request, f'Expense "{transaction.description}" has been added successfully.')
                 return redirect('transaction_list')
         elif 'income_submit' in request.POST:
             income_form = TransactionForm(request.POST, prefix='income')
             income_form.fields['category'].queryset = Category.objects.filter(type='income')
             if income_form.is_valid():
-                income_form.save()
+                transaction = income_form.save()
+                messages.success(request, f'Income "{transaction.description}" has been added successfully.')
                 return redirect('transaction_list')
     
     return render(request, 'expenses/transaction_list.html', {
@@ -69,7 +72,8 @@ def transaction_update(request, pk):
     if request.method == 'POST':
         form = TransactionForm(request.POST, instance=transaction)
         if form.is_valid():
-            form.save()
+            updated_transaction = form.save()
+            messages.success(request, f'Transaction "{updated_transaction.description}" has been updated successfully.')
             return redirect('transaction_list')
     else:
         form = TransactionForm(instance=transaction)
@@ -83,7 +87,9 @@ def transaction_update(request, pk):
 def transaction_delete(request, pk):
     transaction = get_object_or_404(Transaction, pk=pk)
     if request.method == 'POST':
+        description = transaction.description
         transaction.delete()
+        messages.success(request, f'Transaction "{description}" has been deleted successfully.')
         return redirect('transaction_list')
     return render(request, 'expenses/transaction_confirm_delete.html', {
         'transaction': transaction
