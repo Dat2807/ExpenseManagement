@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('', views.transaction_list, name='transaction_list'),
     path('add/', views.transaction_create, name='transaction_create'),
+    path('add/<str:type>/', views.transaction_create_by_type, name='transaction_create_by_type'),
     path('edit/<int:pk>/', views.transaction_update, name='transaction_update'),
     path('delete/<int:pk>/', views.transaction_delete, name='transaction_delete'),
     path('categories/', views.category_list, name='category_list'),

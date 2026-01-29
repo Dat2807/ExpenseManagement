@@ -15,38 +15,33 @@ def transaction_list(request):
     total_income = sum(t.amount for t in incomes)
     balance = total_income - total_expense
     
-    # 2 form riêng
-    expense_form = TransactionForm(prefix='expense')
-    income_form = TransactionForm(prefix='income')
-    
-    # Filter category cho mỗi form
-    expense_form.fields['category'].queryset = Category.objects.filter(type='expense')
-    income_form.fields['category'].queryset = Category.objects.filter(type='income')
-    
-    if request.method == 'POST':
-        if 'expense_submit' in request.POST:
-            expense_form = TransactionForm(request.POST, prefix='expense')
-            expense_form.fields['category'].queryset = Category.objects.filter(type='expense')
-            if expense_form.is_valid():
-                transaction = expense_form.save()
-                messages.success(request, f'Expense "{transaction.description}" has been added successfully.')
-                return redirect('transaction_list')
-        elif 'income_submit' in request.POST:
-            income_form = TransactionForm(request.POST, prefix='income')
-            income_form.fields['category'].queryset = Category.objects.filter(type='income')
-            if income_form.is_valid():
-                transaction = income_form.save()
-                messages.success(request, f'Income "{transaction.description}" has been added successfully.')
-                return redirect('transaction_list')
-    
     return render(request, 'expenses/transaction_list.html', {
         'expenses': expenses,
         'incomes': incomes,
         'total_expense': total_expense,
         'total_income': total_income,
         'balance': balance,
-        'expense_form': expense_form,
-        'income_form': income_form,
+    })
+
+
+# NEW: Create transaction với type parameter (income/expense)
+def transaction_create_by_type(request, type):
+    if request.method == 'POST':
+        form = TransactionForm(request.POST)
+        # Filter category theo type
+        form.fields['category'].queryset = Category.objects.filter(type=type)
+        if form.is_valid():
+            transaction = form.save()
+            type_label = 'Income' if type == 'income' else 'Expense'
+            messages.success(request, f'{type_label} "{transaction.description}" has been added successfully.')
+            return redirect('transaction_list')
+    else:
+        form = TransactionForm()
+        # Filter category theo type
+        form.fields['category'].queryset = Category.objects.filter(type=type)
+    
+    return render(request, 'expenses/transaction_create_form.html', {
+        'form': form,
     })
 
 
