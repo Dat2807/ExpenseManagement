@@ -20,6 +20,7 @@ class Transaction(models.Model):
     amount = models.DecimalField(max_digits=12, decimal_places=0, validators=[MinValueValidator(0)])
     date = models.DateField()
     category = models.ForeignKey(Category, on_delete=models.PROTECT)
+    monthly_budget = models.ForeignKey('MonthlyBudget', on_delete=models.PROTECT, null=True, blank=True, related_name='transactions')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -27,6 +28,7 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f"{self.description} - {self.amount}"
+
 
 # Represents a monthly budget period.
 # Each month can only have one budget entry.
