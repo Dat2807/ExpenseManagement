@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ year }}-{{ month|stringformat:"02d" }} Budget - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="bi bi-calendar3 me-2"></i>
+            Budget: {{ year }}-{{ month|stringformat:"02d" }}
+        </h2>
+        <a href="{% url 'monthly_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>
+            Back to List
+        </a>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" id="monthTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary"
+                type="button" role="tab">
+                <i class="bi bi-bar-chart me-2"></i>
+                Summary
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="transactions-tab" data-bs-toggle="tab" data-bs-target="#transactions"
+                type="button" role="tab">
+                <i class="bi bi-list-ul me-2"></i>
+                Transactions
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="monthTabsContent">
+        <!-- Tab 1: Summary -->
+        <div class="tab-pane fade show active" id="summary" role="tabpanel">
+            <div class="row">
+                <!-- Expense Section -->
+                <div class="col-md-6 mb-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-arrow-down-circle me-2"></i>
+                                Expenses
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Category</th>
+                                            <th class="text-end">Budgeted</th>
+                                            <th class="text-end">Actual</th>
+                                            <th class="text-end">Difference</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="table-secondary">
+                                            <td><strong>Total</strong></td>
+                                            <td class="text-end"><strong>{{ total_expense_budgeted|floatformat:0
+                                                    }}đ</strong></td>
+                                            <td class="text-end"><strong>{{ total_expense_actual|floatformat:0
+                                                    }}đ</strong></td>
+                                            <td
+                                                class="text-end {% if total_expense_budgeted|add:'-'|add:total_expense_actual >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                <strong>{{ total_expense_budgeted|add:total_expense_actual|floatformat:0
+                                                    }}đ</strong>
+                                            </td>
+                                        </tr>
+                                        {% for item in expense_data %}
+                                        <tr class="budget-row" data-category-id="{{ item.category.id }}"
+                                            data-category-name="{{ item.category.name }}"
+                                            data-budgeted="{{ item.budgeted }}" data-type="expense"
+                                            style="cursor: pointer;">
+                                            <td>{{ item.category.name }}</td>
+                                            <td class="text-end">{{ item.budgeted|floatformat:0 }}đ</td>
+                                            <td class="text-end">{{ item.actual|floatformat:0 }}đ</td>
+                                            <td
+                                                class="text-end {% if item.difference >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                {{ item.difference|floatformat:0 }}đ
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Income Section -->
+                <div class="col-md-6 mb-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-arrow-up-circle me-2"></i>
+                                Income
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Category</th>
+                                            <th class="text-end">Budgeted</th>
+                                            <th class="text-end">Actual</th>
+                                            <th class="text-end">Difference</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="table-secondary">
+                                            <td><strong>Total</strong></td>
+                                            <td class="text-end"><strong>{{ total_income_budgeted|floatformat:0
+                                                    }}đ</strong></td>
+                                            <td class="text-end"><strong>{{ total_income_actual|floatformat:0
+                                                    }}đ</strong></td>
+                                            <td
+                                                class="text-end {% if total_income_actual|add:'-'|add:total_income_budgeted >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                <strong>{{ total_income_actual|add:total_income_budgeted|floatformat:0
+                                                    }}đ</strong>
+                                            </td>
+                                        </tr>
+                                        {% for item in income_data %}
+                                        <tr class="budget-row" data-category-id="{{ item.category.id }}"
+                                            data-category-name="{{ item.category.name }}"
+                                            data-budgeted="{{ item.budgeted }}" data-type="income"
+                                            style="cursor: pointer;">
+                                            <td>{{ item.category.name }}</td>
+                                            <td class="text-end">{{ item.budgeted|floatformat:0 }}đ</td>
+                                            <td class="text-end">{{ item.actual|floatformat:0 }}đ</td>
+                                            <td
+                                                class="text-end {% if item.difference >= 0 %}text-danger{% else %}text-success{% endif %}">
+                                                {{ item.difference|floatformat:0 }}đ
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Transactions -->
+        <div class="tab-pane fade" id="transactions" role="tabpanel">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5>Transactions in {{ year }}-{{ month|stringformat:"02d" }}</h5>
+                    {% if transactions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Description</th>
+                                    <th>Category</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaction in transactions %}
+                                <tr>
+                                    <td>{{ transaction.date }}</td>
+                                    <td
+                                        class="{% if transaction.category.type == 'income' %}text-success{% else %}text-danger{% endif %}">
+                                        {{ transaction.amount|floatformat:0 }}đ
+                                    </td>
+                                    <td>{{ transaction.description }}</td>
+                                    <td>{{ transaction.category.name }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No transactions in this month yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for updating budget -->
+<div class="modal fade" id="budgetModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Budget</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="budgetForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>Category: <strong id="modalCategoryName"></strong></p>
+                    <div class="mb-3">
+                        <label for="budgeted_amount" class="form-label">Budgeted Amount (đ)</label>
+                        <input type="number" class="form-control" name="budgeted_amount" id="budgeted_amount" min="0"
+                            step="1000" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let budgetModal;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        budgetModal = new bootstrap.Modal(document.getElementById('budgetModal'));
+
+        // Add click event listeners to all budget rows
+        document.querySelectorAll('.budget-row').forEach(row => {
+            row.addEventListener('click', function () {
+                const categoryId = this.dataset.categoryId;
+                const categoryName = this.dataset.categoryName;
+                const budgeted = this.dataset.budgeted;
+                const type = this.dataset.type;
+                openBudgetModal(categoryId, categoryName, budgeted, type);
+            });
+        });
+    });
+
+    function openBudgetModal(categoryId, categoryName, currentBudget, type) {
+        document.getElementById('modalCategoryName').textContent = categoryName;
+        document.getElementById('budgeted_amount').value = currentBudget;
+
+        const form = document.getElementById('budgetForm');
+        form.action = "{% url 'category_budget_update' year month 0 %}".replace('/0/', `/${categoryId}/`);
+
+        budgetModal.show();
+    }
+</script>
+{% endblock %}

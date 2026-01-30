@@ -131,7 +131,7 @@
                 </a>
             </li>
             <li>
-                <a href="#" class="{% if 'monthly' in request.path %}active{% endif %}">
+                <a href="{% url 'monthly_list' %}" class="{% if 'monthly' in request.path %}active{% endif %}">
                     <i class="bi bi-calendar3"></i>
                     <span>Monthly Budget</span>
                 </a>

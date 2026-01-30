@@ -1,9 +1,16 @@
 from django.urls import path
-from .views import transaction_views, category_views, dashboard_views
+from .views import transaction_views, category_views, dashboard_views, monthly_views
 
 urlpatterns = [
     # Dashboard
     path('', dashboard_views.dashboard_home, name='dashboard_home'),
+    
+    # Monthly Budget
+    path('monthly/', monthly_views.monthly_list, name='monthly_list'),
+    path('monthly/create/', monthly_views.month_create, name='month_create'),
+    path('monthly/<int:year>/<int:month>/', monthly_views.month_detail, name='month_detail'),
+    path('monthly/<int:year>/<int:month>/budget/<int:category_id>/', monthly_views.category_budget_update, name='category_budget_update'),
+    path('monthly/<int:year>/<int:month>/delete/', monthly_views.month_delete, name='month_delete'),
     
     # Transactions (keep for backward compatibility, will be integrated into monthly detail later)
     path('transactions/', transaction_views.transaction_list, name='transaction_list'),

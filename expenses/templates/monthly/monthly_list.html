@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Monthly Budget - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="bi bi-calendar3 me-2"></i>
+            Monthly Budget
+        </h2>
+        <button type="button" class="btn btn-primary" data-modal-url="{% url 'month_create' %}"
+            data-modal-title="Create New Month">
+            <i class="bi bi-plus-circle me-2"></i>
+            Create New Month
+        </button>
+    </div>
+
+    {% if budget_data %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Month</th>
+                            <th class="text-end">Income</th>
+                            <th class="text-end">Expense</th>
+                            <th class="text-end">Balance</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in budget_data %}
+                        <tr class="month-row" style="cursor: pointer;"
+                            data-url="{% url 'month_detail' item.budget.year item.budget.month %}">
+                            <td>
+                                <strong>{{ item.budget.year }}-{{ item.budget.month|stringformat:"02d" }}</strong>
+                            </td>
+                            <td class="text-end text-success">
+                                {{ item.income|floatformat:0|default:"0" }}đ
+                            </td>
+                            <td class="text-end text-danger">
+                                {{ item.expense|floatformat:0|default:"0" }}đ
+                            </td>
+                            <td class="text-end {% if item.balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                <strong>{{ item.balance|floatformat:0 }}đ</strong>
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'month_detail' item.budget.year item.budget.month %}"
+                                    class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                    View
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                    data-modal-url="{% url 'month_delete' item.budget.year item.budget.month %}"
+                                    data-modal-title="Delete Month">
+                                    <i class="bi bi-trash"></i>
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-calendar-x" style="font-size: 4rem; color: #cbd5e1;"></i>
+        <h4 class="mt-3 text-muted">No monthly budgets yet</h4>
+        <p class="text-muted">Create your first monthly budget to get started</p>
+        <button type="button" class="btn btn-primary mt-3" data-modal-url="{% url 'month_create' %}"
+            data-modal-title="Create New Month">
+            <i class="bi bi-plus-circle me-2"></i>
+            Create New Month
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Universal Modal -->
+<div class="modal fade" id="universalModal" tabindex="-1" aria-labelledby="universalModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" id="modalContent">
+            <!-- Content will be loaded here via AJAX -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function loadModal(url, title) {
+        fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const contentBlock = doc.querySelector('.container') || doc.querySelector('.card') || doc.body;
+
+                const modalHTML = `
+                    <div class="modal-header">
+                        <h5 class="modal-title">${title}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        ${contentBlock.innerHTML}
+                    </div>
+                `;
+
+                document.getElementById('modalContent').innerHTML = modalHTML;
+
+                const form = document.querySelector('#universalModal form');
+                if (form) {
+                    form.setAttribute('action', url);
+                }
+
+                const modal = new bootstrap.Modal(document.getElementById('universalModal'));
+                modal.show();
+            })
+            .catch(error => {
+                console.error('Error loading modal:', error);
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Add click event listeners to all month rows
+        document.querySelectorAll('.month-row').forEach(row => {
+            row.addEventListener('click', function (e) {
+                // Don't navigate if clicking on the View button
+                if (!e.target.closest('.btn')) {
+                    window.location = this.dataset.url;
+                }
+            });
+        });
+
+        // Modal button handlers
+        document.querySelectorAll('[data-modal-url]').forEach(button => {
+            button.addEventListener('click', function () {
+                const url = this.getAttribute('data-modal-url');
+                const title = this.getAttribute('data-modal-title');
+                loadModal(url, title);
+            });
+        });
+    });
+</script>
+{% endblock %}

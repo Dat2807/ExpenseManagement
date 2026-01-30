@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Monthly Budget - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card border-danger">
+        <div class="card-header bg-danger text-white">
+            <h4 class="mb-0">Delete Monthly Budget</h4>
+        </div>
+        <div class="card-body">
+            <p class="mb-4">Are you sure you want to delete the monthly budget for <strong>{{ year }}-{{
+                    month|stringformat:"02d" }}</strong>?</p>
+            <p class="text-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                This will also delete all category budgets associated with this month.
+            </p>
+
+            <form method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-trash me-2"></i>
+                    Yes, Delete
+                </button>
+                <a href="{% url 'monthly_list' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

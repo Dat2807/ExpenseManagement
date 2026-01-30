@@ -1,10 +1,7 @@
 from django.shortcuts import render
 
-
+# Dashboard home page - Welcome screen
 def dashboard_home(request):
-    """
-    Dashboard home page - Welcome screen
-    """
     context = {
         'page_title': 'Dashboard',
     }
