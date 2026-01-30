@@ -221,41 +221,171 @@ expense_tracker/
 
 ---
 
+### Phase 5.5: Dashboard Layout with Sidebar Navigation
+
+**Mục tiêu:** Tạo layout tổng thể với sidebar navigation để dễ mở rộng tính năng
+
+**Layout Structure:**
+```
+┌─────────────────────────────────────────┐
+│  [Logo] Expense Tracker                 │
+├──────────┬──────────────────────────────┤
+│          │                              │
+│ Sidebar  │      Main Content            │
+│          │                              │
+│ • Home   │  Welcome to Expense Tracker  │
+│ • Monthly│                              │
+│   Budget │  [Dashboard content here]    │
+│ • Catego │                              │
+│   ries   │                              │
+│ • Statis │                              │
+│   tics   │                              │
+│ • Settin │                              │
+│   gs     │                              │
+│          │                              │
+└──────────┴──────────────────────────────┘
+```
+
+**Sidebar Menu Items:**
+- [ ] **Home / Dashboard** - Welcome page (trang trống với lời chào)
+- [ ] **Monthly Budget** - Quản lý ngân sách theo tháng
+- [ ] **Categories** - Quản lý danh mục thu/chi
+- [ ] **Statistics** (Future) - Biểu đồ thống kê
+- [ ] **Settings** (Future) - Cài đặt, user profile
+
+**Templates:**
+- [ ] `base.html` - Cập nhật layout với sidebar
+  - Header với logo/title
+  - Sidebar navigation (fixed, responsive)
+  - Main content area
+- [ ] `dashboard/home.html` - Trang chủ welcome
+  - "Welcome to Expense Tracker"
+  - Quick stats overview (optional)
+  - Recent activities (optional)
+
+**Static Files:**
+- [ ] `css/sidebar.css` - Style cho sidebar
+  - Fixed sidebar on desktop
+  - Collapsible on mobile
+  - Active menu highlighting
+  - Hover effects
+
+**URLs Structure:**
+- [ ] `/` → Dashboard home (welcome page)
+- [ ] `/monthly/` → Monthly budget list
+- [ ] `/categories/` → Category management
+- [ ] `/statistics/` → Statistics (future)
+- [ ] `/settings/` → Settings (future)
+
+**Implementation Steps:**
+1. [ ] Tạo `dashboard` app mới (hoặc dùng expenses app)
+2. [ ] Cập nhật `base.html` với sidebar layout
+3. [ ] Tạo `dashboard/home.html` - Welcome page
+4. [ ] Tạo `sidebar.css` với responsive design
+5. [ ] Update URLs - `/` → dashboard home
+6. [ ] Thêm active state cho menu items
+7. [ ] Test responsive behavior (mobile/tablet/desktop)
+
+---
+
 ### Phase 6: Monthly Budget System
 
+**Flow tổng quan:**
+```
+1. Homepage (Monthly List) → Click [+ Tạo tháng mới]
+2. Modal: Chọn tháng/năm → Tạo MonthlyBudget
+3. Redirect → Month Detail (2 tabs):
+   ├─ Tab 1: "Tóm tắt" - Budget Planning
+   │   ├─ Chi phí: Dự kiến | Thực tế | Chênh lệch (theo category)
+   │   └─ Thu nhập: Dự kiến | Thực tế | Chênh lệch (theo category)
+   └─ Tab 2: "Giao dịch" - Transactions List
+       └─ Danh sách transactions trong tháng (như hiện tại)
+```
+
 **Models:**
-- [ ] Tạo model `MonthlyBudget` (year, month, budgeted_expense)
+- [ ] Tạo model `MonthlyBudget`
+  ```python
+  year = IntegerField()
+  month = IntegerField()
+  created_at = DateTimeField(auto_now_add=True)
+  unique_together = ('year', 'month')
+  ```
+- [ ] Tạo model `CategoryBudget`
+  ```python
+  monthly_budget = ForeignKey(MonthlyBudget)
+  category = ForeignKey(Category)
+  budgeted_amount = DecimalField(default=0)  # Dự kiến
+  unique_together = ('monthly_budget', 'category')
+  ```
+  - **Lưu ý**: Thực tế sẽ tính từ Transaction, không lưu vào DB
 - [ ] Tạo model `GlobalBalance` (initial_balance, current_balance)
 - [ ] Chạy migrations
 
 **Views:**
-- [ ] Tạo `monthly_list` view - Trang chủ hiển thị list các tháng
-  - Group transactions theo năm/tháng
-  - Tính income/expense/balance cho mỗi tháng
-  - Hiển thị global balance
-- [ ] Tạo `month_detail` view - Chi tiết tháng
-  - Hiển thị transactions trong tháng (income/expense 2 cột)
-  - Form nhập/sửa budget cho tháng
-  - Form thêm transaction (modal như hiện tại)
-- [ ] Logic tính toán global balance tự động
+- [ ] `monthly_list` - Homepage (Trang chủ)
+  - Hiển thị list các MonthlyBudget đã tạo
+  - Mỗi row: Tháng/Năm | Income | Expense | Balance
+  - Button [+ Tạo tháng mới]
+  - Hiển thị Global Balance ở header
+- [ ] `month_create` - Tạo tháng mới
+  - Form chọn year/month (hoặc tự động = tháng hiện tại)
+  - Tạo MonthlyBudget
+  - Redirect về `month_detail`
+- [ ] `month_detail` - Chi tiết tháng (2 tabs)
+  - **Tab 1: "Tóm tắt"** (Budget Planning)
+    - Bảng Chi phí: Category | Dự kiến | Thực tế | Chênh lệch
+    - Bảng Thu nhập: Category | Dự kiến | Thực tế | Chênh lệch
+    - Click vào "Dự kiến" → Edit inline hoặc modal
+  - **Tab 2: "Giao dịch"** (Transactions)
+    - Tái sử dụng transaction_list layout
+    - Filter transactions theo tháng hiện tại
+    - Button thêm transaction (modal)
+- [ ] `category_budget_update` - Update dự kiến cho category
+  - AJAX endpoint để update CategoryBudget.budgeted_amount
+  - Hoặc form đơn giản nếu không dùng AJAX
+- [ ] Logic tính toán:
+  - **Thực tế**: `SUM(Transaction.amount)` WHERE `date` in month, GROUP BY `category`
+  - **Chênh lệch**: `Dự kiến - Thực tế`
+  - **Global Balance**: `initial_balance + SUM(income) - SUM(expense)`
 
 **Templates:**
-- [ ] `monthly_list.html` - Bảng list các tháng
-  - Columns: Tháng/Năm | Income | Expense | Budget | Balance | Actions
-  - Click vào row → chuyển đến `month_detail`
-  - Hiển thị Global Balance ở trên
+- [ ] `monthly_list.html` - Homepage
+  - Bảng list MonthlyBudget
+  - Button [+ Tạo tháng mới] → Modal hoặc redirect
+  - Header hiển thị Global Balance
+- [ ] `month_create_form.html` - Form tạo tháng (modal hoặc page)
+  - Input: Year (dropdown hoặc number)
+  - Input: Month (dropdown 1-12)
+  - Submit → Tạo MonthlyBudget
 - [ ] `month_detail.html` - Chi tiết tháng
-  - Tái sử dụng layout từ `transaction_list.html`
-  - Thêm phần Budget (dự kiến vs thực tế)
-  - List transactions trong tháng
+  - Bootstrap Tabs: "Tóm tắt" | "Giao dịch"
+  - Tab 1: 2 bảng (Chi phí + Thu nhập) với Dự kiến/Thực tế/Chênh lệch
+  - Tab 2: Tái sử dụng transaction_list layout
+- [ ] `category_budget_form.html` - Form edit dự kiến (nếu dùng modal)
 
 **Forms:**
-- [ ] `MonthlyBudgetForm` - Form nhập/sửa budget
+- [ ] `MonthlyBudgetForm` - Form tạo tháng mới (chọn year/month)
+- [ ] `CategoryBudgetForm` - Form nhập/sửa dự kiến cho category
 - [ ] `GlobalBalanceForm` - Form nhập vốn ban đầu (tùy chọn)
 
 **URLs:**
-- [ ] Đổi homepage từ `transaction_list` → `monthly_list`
-- [ ] Thêm route `month/<year>/<month>/` cho `month_detail`
+- [ ] `/` → `monthly_list` (Homepage mới)
+- [ ] `/month/create/` → `month_create`
+- [ ] `/month/<year>/<month>/` → `month_detail` (default tab: Tóm tắt)
+- [ ] `/month/<year>/<month>/transactions/` → `month_detail` (tab: Giao dịch)
+- [ ] `/month/<year>/<month>/budget/update/` → `category_budget_update`
+- [ ] `/transactions/` → Giữ lại transaction_list cũ (hoặc xóa nếu không dùng)
+
+**Implementation Steps:**
+1. [ ] Tạo models `MonthlyBudget` + `CategoryBudget` + migrations
+2. [ ] Tạo view `month_create` + form tạo tháng mới
+3. [ ] Tạo view `monthly_list` - Homepage list các tháng
+4. [ ] Tạo view `month_detail` - Tab "Tóm tắt" (hiển thị bảng Dự kiến/Thực tế)
+5. [ ] Implement logic tính "Thực tế" từ transactions
+6. [ ] Tạo view `category_budget_update` - Edit dự kiến (inline hoặc modal)
+7. [ ] Tạo Tab "Giao dịch" - Tái sử dụng transaction_list
+8. [ ] Update URLs - Đổi homepage từ `/` → `monthly_list`
+9. [ ] Tạo model `GlobalBalance` + logic tính tổng balance
 
 ---
 
