@@ -62,14 +62,17 @@
                                     <tbody>
                                         <tr class="table-secondary">
                                             <td><strong>Total</strong></td>
-                                            <td class="text-end"><strong>{{ total_expense_budgeted|floatformat:0
-                                                    }}đ</strong></td>
-                                            <td class="text-end"><strong>{{ total_expense_actual|floatformat:0
-                                                    }}đ</strong></td>
+
+                                            <td class="text-end">
+                                                <strong>{{ total_expense_budgeted|floatformat:0 }}</strong>
+                                            </td>
+
+                                            <td class="text-end">
+                                                <strong>{{ total_expense_actual|floatformat:0 }}</strong>
+                                            </td>
                                             <td
-                                                class="text-end {% if total_expense_budgeted|add:'-'|add:total_expense_actual >= 0 %}text-success{% else %}text-danger{% endif %}">
-                                                <strong>{{ total_expense_budgeted|add:total_expense_actual|floatformat:0
-                                                    }}đ</strong>
+                                                class="text-end {% if total_expense_difference >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                <strong>{{ total_expense_difference|floatformat:0 }}</strong>
                                             </td>
                                         </tr>
                                         {% for item in expense_data %}
@@ -78,11 +81,11 @@
                                             data-budgeted="{{ item.budgeted }}" data-type="expense"
                                             style="cursor: pointer;">
                                             <td>{{ item.category.name }}</td>
-                                            <td class="text-end">{{ item.budgeted|floatformat:0 }}đ</td>
-                                            <td class="text-end">{{ item.actual|floatformat:0 }}đ</td>
+                                            <td class="text-end">{{ item.budgeted|floatformat:0 }}</td>
+                                            <td class="text-end">{{ item.actual|floatformat:0 }}</td>
                                             <td
                                                 class="text-end {% if item.difference >= 0 %}text-success{% else %}text-danger{% endif %}">
-                                                {{ item.difference|floatformat:0 }}đ
+                                                {{ item.difference|floatformat:0 }}
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -116,27 +119,36 @@
                                     <tbody>
                                         <tr class="table-secondary">
                                             <td><strong>Total</strong></td>
-                                            <td class="text-end"><strong>{{ total_income_budgeted|floatformat:0
-                                                    }}đ</strong></td>
-                                            <td class="text-end"><strong>{{ total_income_actual|floatformat:0
-                                                    }}đ</strong></td>
+
+                                            <td class="text-end">
+                                                <strong>
+                                                    {{ total_income_budgeted|floatformat:0}}
+                                                </strong>
+                                            </td>
+
+                                            <td class="text-end">
+                                                <strong>
+                                                    {{ total_income_actual|floatformat:0}}
+                                                </strong>
+                                            </td>
+
                                             <td
-                                                class="text-end {% if total_income_actual|add:'-'|add:total_income_budgeted >= 0 %}text-success{% else %}text-danger{% endif %}">
-                                                <strong>{{ total_income_actual|add:total_income_budgeted|floatformat:0
-                                                    }}đ</strong>
+                                                class="text-end {% if total_income_difference >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                <strong>{{ total_income_difference|floatformat:0 }}</strong>
                                             </td>
                                         </tr>
+
                                         {% for item in income_data %}
                                         <tr class="budget-row" data-category-id="{{ item.category.id }}"
                                             data-category-name="{{ item.category.name }}"
                                             data-budgeted="{{ item.budgeted }}" data-type="income"
                                             style="cursor: pointer;">
                                             <td>{{ item.category.name }}</td>
-                                            <td class="text-end">{{ item.budgeted|floatformat:0 }}đ</td>
-                                            <td class="text-end">{{ item.actual|floatformat:0 }}đ</td>
+                                            <td class="text-end">{{ item.budgeted|floatformat:0 }}</td>
+                                            <td class="text-end">{{ item.actual|floatformat:0 }}</td>
                                             <td
-                                                class="text-end {% if item.difference >= 0 %}text-danger{% else %}text-success{% endif %}">
-                                                {{ item.difference|floatformat:0 }}đ
+                                                class="text-end {% if item.difference > 0 %}text-danger{% else %}text-success{% endif %}">
+                                                {{ item.difference|floatformat:0 }}
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -151,43 +163,133 @@
 
         <!-- Tab 2: Transactions -->
         <div class="tab-pane fade" id="transactions" role="tabpanel">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h5>Transactions in {{ year }}-{{ month|stringformat:"02d" }}</h5>
-                    {% if transactions %}
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Amount</th>
-                                    <th>Description</th>
-                                    <th>Category</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for transaction in transactions %}
-                                <tr>
-                                    <td>{{ transaction.date }}</td>
-                                    <td
-                                        class="{% if transaction.category.type == 'income' %}text-success{% else %}text-danger{% endif %}">
-                                        {{ transaction.amount|floatformat:0 }}đ
-                                    </td>
-                                    <td>{{ transaction.description }}</td>
-                                    <td>{{ transaction.category.name }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+            <!-- Balance Card -->
+            <div class="card mb-4 {% if month_balance >= 0 %}border-success{% else %}border-danger{% endif %}">
+                <div class="card-body text-center">
+                    <h4 class="mb-0">
+                        Balance:
+                        <span class="{% if month_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {% if month_balance >= 0 %}+{% endif %}{{ month_balance|floatformat:0 }}đ
+                        </span>
+                    </h4>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- LEFT: EXPENSES (red) -->
+                <div class="col-md-6">
+                    <div class="card border-danger mb-4">
+                        <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">EXPENSES: {{ month_expense|floatformat:0 }}đ</h5>
+                            <button class="btn btn-light btn-sm"
+                                data-modal-url="{% url 'transaction_create_by_type' 'expense' %}?year={{ year }}&month={{ month }}"
+                                data-modal-title="Add Expense">
+                                + Add Expense
+                            </button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th class="text-end">Amount</th>
+                                        <th>Description</th>
+                                        <th>Category</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for t in expenses %}
+                                    <tr>
+                                        <td>{{ t.date|date:"d/m/y" }}</td>
+                                        <td class="text-end text-danger">{{ t.amount|floatformat:0 }}đ</td>
+                                        <td>{{ t.description }}</td>
+                                        <td><span class="badge bg-secondary">{{ t.category.name }}</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-warning py-0"
+                                                data-modal-url="{% url 'transaction_update' t.pk %}?year={{ year }}&month={{ month }}"
+                                                data-modal-title="Edit Transaction">Edit</button>
+                                            <button class="btn btn-sm btn-outline-danger py-0"
+                                                data-modal-url="{% url 'transaction_delete' t.pk %}?year={{ year }}&month={{ month }}"
+                                                data-modal-title="Delete Transaction">X</button>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">No expenses</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    {% else %}
-                    <p class="text-muted">No transactions in this month yet.</p>
-                    {% endif %}
+                </div>
+
+                <!-- RIGHT: INCOME (green) -->
+                <div class="col-md-6">
+                    <div class="card border-success mb-4">
+                        <div
+                            class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">INCOME: {{ month_income|floatformat:0 }}đ</h5>
+                            <button class="btn btn-light btn-sm"
+                                data-modal-url="{% url 'transaction_create_by_type' 'income' %}?year={{ year }}&month={{ month }}"
+                                data-modal-title="Add Income">
+                                + Add Income
+                            </button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th class="text-end">Amount</th>
+                                        <th>Description</th>
+                                        <th>Category</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for t in incomes %}
+                                    <tr>
+                                        <td>{{ t.date|date:"d/m" }}</td>
+                                        <td class="text-end text-success">{{ t.amount|floatformat:0 }}đ</td>
+                                        <td>{{ t.description }}</td>
+                                        <td><span class="badge bg-secondary">{{ t.category.name }}</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-warning py-0"
+                                                data-modal-url="{% url 'transaction_update' t.pk %}?year={{ year }}&month={{ month }}"
+                                                data-modal-title="Edit Transaction">Edit</button>
+                                            <button class="btn btn-sm btn-outline-danger py-0"
+                                                data-modal-url="{% url 'transaction_delete' t.pk %}?year={{ year }}&month={{ month }}"
+                                                data-modal-title="Delete Transaction">X</button>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">No income</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Universal Modal for Transactions -->
+<div class="modal fade" id="universalModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" id="modalContent">
+            <!-- Content will be loaded here via AJAX -->
+        </div>
+    </div>
+</div>
+
 
 <!-- Modal for updating budget -->
 <div class="modal fade" id="budgetModal" tabindex="-1">
@@ -202,9 +304,9 @@
                 <div class="modal-body">
                     <p>Category: <strong id="modalCategoryName"></strong></p>
                     <div class="mb-3">
-                        <label for="budgeted_amount" class="form-label">Budgeted Amount (đ)</label>
+                        <label for="budgeted_amount" class="form-label">Budgeted Amount</label>
                         <input type="number" class="form-control" name="budgeted_amount" id="budgeted_amount" min="0"
-                            step="1000" required>
+                            required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -221,6 +323,39 @@
 <script>
     let budgetModal;
 
+    function loadModal(url, title) {
+        fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const contentBlock = doc.querySelector('.container') || doc.querySelector('.card') || doc.body;
+
+                const modalHTML = `
+                    <div class="modal-header">
+                        <h5 class="modal-title">${title}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        ${contentBlock.innerHTML}
+                    </div>
+                `;
+
+                document.getElementById('modalContent').innerHTML = modalHTML;
+
+                const form = document.querySelector('#universalModal form');
+                if (form) {
+                    form.setAttribute('action', url);
+                }
+
+                const modal = new bootstrap.Modal(document.getElementById('universalModal'));
+                modal.show();
+            })
+            .catch(error => {
+                console.error('Error loading modal:', error);
+            });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         budgetModal = new bootstrap.Modal(document.getElementById('budgetModal'));
 
@@ -232,6 +367,15 @@
                 const budgeted = this.dataset.budgeted;
                 const type = this.dataset.type;
                 openBudgetModal(categoryId, categoryName, budgeted, type);
+            });
+        });
+
+        // Modal button handlers for transactions
+        document.querySelectorAll('[data-modal-url]').forEach(button => {
+            button.addEventListener('click', function () {
+                const url = this.getAttribute('data-modal-url');
+                const title = this.getAttribute('data-modal-title');
+                loadModal(url, title);
             });
         });
     });

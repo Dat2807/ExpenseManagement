@@ -125,6 +125,19 @@ def month_detail(request, year, month):
     total_expense_budgeted = sum(item['budgeted'] for item in expense_data)
     total_expense_actual = sum(item['actual'] for item in expense_data)
     
+    # Calculate total differences
+    total_expense_difference = total_expense_budgeted - total_expense_actual
+    total_income_difference = total_income_actual - total_income_budgeted
+    
+    # Separate transactions by type for the 2-column layout
+    expenses = transactions.filter(category__type='expense')
+    incomes = transactions.filter(category__type='income')
+    
+    # Calculate month totals
+    month_expense = sum(t.amount for t in expenses)
+    month_income = sum(t.amount for t in incomes)
+    month_balance = month_income - month_expense
+    
     context = {
         'monthly_budget': monthly_budget,
         'year': year,
@@ -135,24 +148,38 @@ def month_detail(request, year, month):
         'total_income_actual': total_income_actual,
         'total_expense_budgeted': total_expense_budgeted,
         'total_expense_actual': total_expense_actual,
+        'total_expense_difference': total_expense_difference,
+        'total_income_difference': total_income_difference,
         'transactions': transactions,
+        'expenses': expenses,
+        'incomes': incomes,
+        'month_expense': month_expense,
+        'month_income': month_income,
+        'month_balance': month_balance,
     }
     return render(request, 'monthly/month_detail.html', context)
+
 
 # Delete monthly budget
 def month_delete(request, year, month):
     monthly_budget = get_object_or_404(MonthlyBudget, year=year, month=month)
     
     if request.method == 'POST':
-        monthly_budget.delete()
-        messages.success(request, f'Monthly budget for {year}-{month:02d} has been deleted successfully.')
-        return redirect('monthly_list')
+        from django.db.models.deletion import ProtectedError
+        try:
+            monthly_budget.delete()
+            messages.success(request, f'Monthly budget for {year}-{month:02d} has been deleted successfully.')
+            return redirect('monthly_list')
+        except ProtectedError:
+            messages.error(request, f'Cannot delete monthly budget for {year}-{month:02d} because it has transactions. Please delete all transactions first.')
+            return redirect('monthly_list')
     
     return render(request, 'monthly/month_confirm_delete.html', {
         'monthly_budget': monthly_budget,
         'year': year,
         'month': month,
     })
+
 
 # Update budgeted amount for a specific category
 def category_budget_update(request, year, month, category_id):

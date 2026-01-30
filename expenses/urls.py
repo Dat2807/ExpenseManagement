@@ -12,8 +12,7 @@ urlpatterns = [
     path('monthly/<int:year>/<int:month>/budget/<int:category_id>/', monthly_views.category_budget_update, name='category_budget_update'),
     path('monthly/<int:year>/<int:month>/delete/', monthly_views.month_delete, name='month_delete'),
     
-    # Transactions (keep for backward compatibility, will be integrated into monthly detail later)
-    path('transactions/', transaction_views.transaction_list, name='transaction_list'),
+    # Transaction CRUD (accessed via monthly budget)
     path('transactions/add/<str:type>/', transaction_views.transaction_create_by_type, name='transaction_create_by_type'),
     path('transactions/edit/<int:pk>/', transaction_views.transaction_update, name='transaction_update'),
     path('transactions/delete/<int:pk>/', transaction_views.transaction_delete, name='transaction_delete'),
