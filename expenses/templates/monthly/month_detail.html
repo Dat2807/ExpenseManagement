@@ -378,6 +378,14 @@
                 loadModal(url, title);
             });
         });
+
+        // Activate tab based on URL hash
+        const hash = window.location.hash;
+        if (hash === '#transactions') {
+            const transactionsTab = document.querySelector('[data-bs-target="#transactions"]');
+            const transactionsTabInstance = new bootstrap.Tab(transactionsTab);
+            transactionsTabInstance.show();
+        }
     });
 
     function openBudgetModal(categoryId, categoryName, currentBudget, type) {
